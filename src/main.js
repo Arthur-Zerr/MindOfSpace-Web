@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 
 import GameScene from './scenes/GameScene';
 import MenuScene from './scenes/MenuScene';
+import LoginScene from './scenes/LoginScene';
+
+import "nes.css/css/nes.min.css";
 
 
 const config = {
@@ -12,14 +15,24 @@ const config = {
 	gameTitle: 'MindOfSpace',
 	backgroundColor: '#000000',
 	pixelArt: true,
+	parent: 'CanvasDiv',
+	mode: Phaser.Scale.FIT,
+	autoCenter: Phaser.Scale.CENTER_BOTH,
 	antialias: false,
+	fps:60,
 	physics: {
         default: 'arcade',
         arcade: {
             debug: false
         }
 	},
-	scene: [MenuScene, GameScene]
+	dom: {
+        createContainer: true
+	},
+	input: {
+        gamepad: true
+    },
+	scene: [LoginScene, MenuScene, GameScene]
 };
 
 export default new Phaser.Game(config)

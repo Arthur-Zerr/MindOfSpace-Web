@@ -24,6 +24,7 @@
 		"parcel-plugin-static-files-copy": "^2.4.3"
 	},
 	"dependencies": {
+		"nes.css": "^2.3.0",
 		"phaser": "^3.24.1",
 		"phaser-ui-tools": "^2.0.0-beta"
 	},
