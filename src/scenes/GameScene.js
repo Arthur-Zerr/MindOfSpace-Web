@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { QuantityBar } from 'phaser-ui-tools'
 
 var gamepad = undefined;
 
@@ -24,14 +25,17 @@ export default class GameScene extends Phaser.Scene {
         this.load.image('FalconRocketBigFire', 'images/Falcon9BigFire.png');
         this.load.image('FalconHeavyRocket', 'images/FalconHeavy.png');
         this.load.image('StarBackground', 'images/background.png');
+
+        this.load.html('gameUI', 'html/gameUI.html');
+
     }
 
     create() {
-        var windowWidth = window.innerWidth;
-        var windowHeight = window.innerHeight;
-        this.bg = this.add.tileSprite(windowWidth / 2, windowHeight / 2, windowWidth, windowHeight, 'StarBackground').setScrollFactor(0);
+        this.windowWidth = window.innerWidth;
+        this.windowHeight = window.innerHeight;
+        this.bg = this.add.tileSprite(this.windowWidth / 2,this.windowHeight / 2, this.windowWidth, this.windowHeight, 'StarBackground').setScrollFactor(0);
 
-        this.player = this.physics.add.image(windowWidth / 2, windowHeight / 2, 'FalconRocket');
+        this.player = this.physics.add.image(this.windowWidth / 2, this.windowHeight / 2, 'FalconRocket');
         this.player.setScale(3.5, 4.5);
         this.player.setDrag(150);
         this.player.setAngularDrag(200);
@@ -43,6 +47,15 @@ export default class GameScene extends Phaser.Scene {
         this.nitro = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
 
         this.playerState =  PlayerStates.Normal;
+
+        var gameUI = this.add.dom((this.windowWidth / 2), (this.windowHeight) - 75).createFromCache('gameUI');
+        gameUI.setScrollFactor(0);
+
+        this.LiveBar = gameUI.getChildByID('LiveBar');
+        this.NitroBar = gameUI.getChildByID('NitroBar');
+
+        this.NitroTimer = this.time.addEvent({delay: 200, callbackScope: this, callback:this.NitroTick  ,loop: true});
+        this.NitroTimer.paused = true;
     }
 
     update(time, delta) {
@@ -72,6 +85,7 @@ export default class GameScene extends Phaser.Scene {
             break;
         }
 
+
         this.bg.tilePositionX += this.player.body.deltaX() * 0.5;
         this.bg.tilePositionY += this.player.body.deltaY() * 0.5;    
     }
@@ -94,7 +108,7 @@ export default class GameScene extends Phaser.Scene {
         {
             this.PlayerUp();
         }
-        else if ((this.gamepad.X) &&  this.gamepad.up == false && this.gamepad.A == false) 
+        else if ((this.gamepad.X) &&  this.gamepad.up == false && this.gamepad.A == false && parseInt(this.NitroBar.getAttribute('value')) > 0) 
         {
             this.PlayerNitro();
         }
@@ -102,6 +116,7 @@ export default class GameScene extends Phaser.Scene {
         {
             this.playerState = PlayerStates.Normal;
             this.player.setAcceleration(0);
+            this.NitroTimer.paused = true;
         }
     }
 
@@ -120,11 +135,11 @@ export default class GameScene extends Phaser.Scene {
             this.player.setAngularVelocity(0);
         }
     
-        if (this.cursors.up.isDown )//&& this.nitro.isDown == false)
+        if (this.cursors.up.isDown && this.nitro.isDown == false)
         {
             this.PlayerUp();
         }
-        else if (this.nitro.isDown )//&& this.cursors.up.isDown == false) 
+        else if (this.nitro.isDown && this.cursors.up.isDown == false && parseInt(this.NitroBar.getAttribute('value')) > 0)
         {
             this.PlayerNitro();
         }
@@ -132,11 +147,11 @@ export default class GameScene extends Phaser.Scene {
         {
             this.playerState = PlayerStates.Normal;
             this.player.setAcceleration(0);
+            this.NitroTimer.paused = true;
         }
     }
 
     PlayerUp() {
-        console.log("Test");
         this.physics.velocityFromRotation(this.player.rotation - 1.5708, 150, this.player.body.acceleration);
         this.playerState = PlayerStates.Boost;
     }
@@ -144,6 +159,7 @@ export default class GameScene extends Phaser.Scene {
     PlayerNitro() {
         this.playerState = PlayerStates.Turbo;
         this.physics.velocityFromRotation(this.player.rotation - 1.5708, 600, this.player.body.acceleration);
+        this.NitroTimer.paused = false;
     }
 
     PlayerLeft() {
@@ -153,6 +169,10 @@ export default class GameScene extends Phaser.Scene {
     PlayerRight() {
         this.player.setAngularVelocity(150);
 
+    }
+
+    NitroTick() {
+        this.NitroBar.setAttribute('value', (parseInt(this.NitroBar.getAttribute('value')) - 2).toString());
     }
     end() {
 
