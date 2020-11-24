@@ -23,7 +23,7 @@ const config = {
 	physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
 	},
 	dom: {
@@ -35,4 +35,5 @@ const config = {
 	scene: [LoginScene, MenuScene, GameScene]
 };
 
-export default new Phaser.Game(config)
+var game = new Phaser.Game(config); 
+export default game
