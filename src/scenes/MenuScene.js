@@ -1,8 +1,19 @@
 import Phaser from 'phaser'
+
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+
 // @ts-ignore
 import { TextButton, Column} from 'phaser-ui-tools';
+import APIClient from "./../APIClient";
+
+// @ts-ignore
+import { SlideTransition } from 'phaser3-transitions';
 
 export default class MenuScene extends Phaser.Scene {
+
+    ApiClient = new APIClient();
+    
     constructor() {
       super('MenuScene');
     }
@@ -20,56 +31,56 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        let config = {
+          type: 'slide',
+          duration: 500,
+          enterFrom: 'right',
+          exitTo: 'right'
+        }
         var windowWidth = window.innerWidth;
         var windowHeight = window.innerHeight;
 
-        this.bg = this.add.tileSprite(windowWidth / 2, windowHeight / 2, windowWidth, windowHeight, 'StarBackground').setScrollFactor(0);
+        this.bg = this.add.tileSprite(windowWidth / 2 + 60, windowHeight / 2, windowWidth, windowHeight, 'StarBackground').setScrollFactor(0);
 
-        // var textStyle = {'fill': '#FFF', 'font': '16px Courier New'};
-        // // this.header = new TextSprite(this, 0, 0, "header").setText('Header', textStyle).setOrigin(0.0, 0.0);
+        this.view = this.add.dom((windowWidth / 2) , (windowHeight / 2) - 75).createFromCache('menuView');
 
-        // var buttonOne = new TextButton(this, 0, 0, "button", this.newGameCallback, this, 1, 0, 2, 1)
-        //   .setText("New Game", textStyle)
-        //   .eventTextYAdjustment(3);
-        // var buttonTwo = new TextButton(this, 0, 0, "button", this.continueCallback, this, 1, 0, 2, 1)
-        //   .setText("Continue", textStyle)
-        //   .eventTextYAdjustment(3);
-        // var buttonThree = new TextButton(this, 0, 0, "button", this.optionsCallback, this, 1, 0, 2, 1)
-        //   .setText("Options", textStyle)
-        //   .eventTextYAdjustment(3);
+        let sprite = [this.view];
+
+        this.slide = new SlideTransition(this, sprite, config);
+        this.slide.enter();
+        this.view.addListener('click');
+        this.view.on('click', async function (event) {
     
-        // var column = new Column(this, window.innerWidth / 2, window.innerHeight / 2);
-        // column.addNode(buttonOne, 0, 10);
-        // column.addNode(buttonTwo, 0, 10);
-        // column.addNode(buttonThree, 0,10);
+          if (event.target.name === 'traning') {
+            // this.removeListener('click');
+            this.scene.transition({ target: 'GameScene'});
 
-        var view = this.add.dom((windowWidth / 2) - 35 , (windowHeight / 2) - 75).createFromCache('menuView');
-        view.addListener('click');
-        view.on('click', function (event) {
-    
-          if (event.target.name === 'randomGameJoin')
-          {
-            this.scene.scene.start('GameScene');
-            this.removeListener('click');
-            this.scene.scene.stop();
           }
-      });
-    }
-    
-    newGameCallback = function() {
-        this.scene.transition({ target: 'GameScene'});
-    }
-    
-    
-    continueCallback = function() {
-        this.header.text.setText('You clicked the Continue button');
-    }
-    
-    
-    optionsCallback = function() {
-        this.header.text.setText('You clicked the Options button');
-    }
+          if(event.target.name === 'logout') {
+            localStorage.removeItem('Player')
+            // this.removeListener('click');
+            this.slide.exit();
+            this.scene.transition({ target: 'LoginScene'});
 
+          }
+          if(event.target.name === 'createGame') {
+            // this.removeListener('click');
+            this.scene.transition({ target: 'CreateLobbyScene'});
+          }
+          if(event.target.name === 'JoinGame'){
+            var joinId = this.view.getChildByID('joinGameIdText');
+            var response = await this.ApiClient.GameExistAsync(joinId.value);
+            if(response.code == 200){
+                this.scene.transition({ target: 'JoinLobbyScene', data: {gameId: joinId.value}});
+            }
+            else{ 
+              alert('Game not Found!');
+            }
+          }
+
+      }, this);
+    }
+    
     update() { 
     }
 

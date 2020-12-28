@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
+import TransitionsPlugin from 'phaser3-transitions';
 
 import GameScene from './scenes/GameScene';
 import MenuScene from './scenes/MenuScene';
 import LoginScene from './scenes/LoginScene';
+import CreateLobbyScene from './scenes/Lobby/CreateLobbyScene';
+import JoinLobbyScene from './scenes/Lobby/JoinLobbyScene';
 
 import "nes.css/css/nes.min.css";
-
 
 const config = {
 	type: Phaser.AUTO,
@@ -23,17 +25,29 @@ const config = {
 	physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
 	},
 	dom: {
         createContainer: true
 	},
+	plugins: {
+        scene: [
+            { 
+                key: 'transitions', 
+                mapping: 'transitions',
+                plugin: TransitionsPlugin
+            }
+        ]
+    },
 	input: {
         gamepad: true
     },
-	scene: [LoginScene, MenuScene, GameScene]
+	scene: [LoginScene, MenuScene, GameScene, CreateLobbyScene, JoinLobbyScene]
 };
 
 var game = new Phaser.Game(config); 
+localStorage.removeItem("Player")
+localStorage.removeItem("Game")
+
 export default game

@@ -3,32 +3,42 @@
       font-family: EarthOrbit;
       color: white;
       font-size: 5em;
+      margin-left: 35px;
     }
   
     html, body, pre, code, kbd, samp {
       font-family: "PressStart2P";
     }
-  </style>
-  
-  <link rel="stylesheet" href="../../node_modules/nes.css/css/nes.min.css">
-  <div class="is-centered" style="width: 600px;">
-    <h1 class="Title">MindOfSpace</h1>
-    <section class="nes-container is-centered" style="margin-left: 50px; margin-right: 50px;">
-        <div id="dialog" class="item">
-            <section>
-                <input type="button" value="Create Game" name="createGane" class="nes-btn" style="cursor: pointer;">
-            </section>
-            <div style="height: 10px !important;"></div>
-            <section>
-                <input type="button" value="Join Random Game" name="randomGameJoin" class="nes-btn" style="cursor: pointer;">
-            </section>
-            <div style="height: 10px !important;"></div>
+</style>
 
-            <section class="ns-field is-inline">
-                <input type="text" placeholder="Game Id" name="joinGameIdText" class="nes-input" style="width: 300px;">
-                <input type="button" value="Join" name="JoinGame" class="nes-btn" style="cursor: pointer;">
+<section class="is-centered" style="width: 650px;">
+  <h1 class="Title">MindOfSpace</h1>
+  <section class="nes-container is-centered" style="margin-left: 50px; margin-right: 50px;margin-top: 50px;">
+      <div id="dialog" class="item">
+        <table style="margin-left: 50px; margin-right: 50px;">
+          <tr>
+            <td>
+              <section>
+                <input type="button" value="Create Game" name="createGame" class="nes-btn" style="cursor: pointer;">
             </section>
-        </div>
+            </td>
+            <td>
+              <section>
+                <input type="button" value="Training" name="traning" class="nes-btn" style="cursor: pointer;">
+            </section>
+            </td>
+          </tr>
+        </table>
+        <div style="height: 20px !important;"></div>
+        <section class="ns-field is-inline">
+            <input type="text" placeholder="Game Id" id="joinGameIdText" class="nes-input" style="width: 300px;">
+            <input type="button" value="Join" name="JoinGame" class="nes-btn" style="cursor: pointer;">
+        </section>
+        <div style="height: 20px !important;"></div>
+        <section>
+          <input type="button" value="Logout" name="logout" class="nes-btn" style="cursor: pointer;">
+      </section>
     </div>
-  </div>
+  </section>
+</section>
   

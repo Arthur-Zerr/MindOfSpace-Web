@@ -1,12 +1,13 @@
 import Phaser from 'phaser'
-import { QuantityBar } from 'phaser-ui-tools'
 
 var gamepad = undefined;
+var Debug = true;
 
 const PlayerStates = {
     Normal: 1,
     Boost: 2,
-    Turbo: 3
+    Turbo: 3,
+    Dead: 4
 }
 
 export default class GameScene extends Phaser.Scene {
@@ -16,17 +17,17 @@ export default class GameScene extends Phaser.Scene {
 
 
     init() {
-        this.ShowEscapeMenu = false;
     }
 
     preload() {
         this.load.image('FalconRocket', 'images/Falcon.png');
         this.load.image('FalconRocketFire', 'images/Falcon9Fire.png');
         this.load.image('FalconRocketBigFire', 'images/Falcon9BigFire.png');
-        this.load.image('FalconHeavyRocket', 'images/FalconHeavy.png');
         this.load.image('StarBackground', 'images/background.png');
+        this.load.image('Explosion','images/explosion.png')
 
         this.load.html('gameUI', 'html/gameUI.html');
+        this.load.html('deadView', 'html/deadView.html');
 
         this.load.image('EarthPlanet', 'images/Planets/Earth.png')
         this.load.image('Cancerlanet', 'images/Planets/CancerPlanet.png')
@@ -55,8 +56,17 @@ export default class GameScene extends Phaser.Scene {
         this.cameras.main.startFollow(this.player);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.nitro = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+        this.debugDamage = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
         this.playerState = PlayerStates.Normal;
+
+        // Planets --------------
+        this.Planets = [];
+        this.PlayerRadius = 1000;
+        for (let index = 0; index < 1000; index++) {
+            this.SpawnPlanets();   
+        }
+        // this.children.bringToTop(this.player);
 
         // UI --------------
         var gameUI = this.add.dom((this.windowWidth / 2), (this.windowHeight) - 75).createFromCache('gameUI');
@@ -68,25 +78,22 @@ export default class GameScene extends Phaser.Scene {
         this.NitroTimer = this.time.addEvent({ delay: 200, callbackScope: this, callback: this.NitroTick, loop: true });
         this.NitroTimer.paused = true;
 
-        // Planets --------------
+        this.deadView = this.add.dom((this.windowWidth / 2) + 10, (this.windowHeight) / 2).createFromCache('deadView');
+        this.deadView.setScrollFactor(0);
+        this.deadView.setVisible(false);
 
-        this.Planets = [];
-        this.PlayerRadius = 1000;
-        for (let index = 0; index < 1000; index++) {
-            this.SpawnPlanets();
-            
-        }
+        this.PlayerIsDead = false;
+        this.PlayerStateUpdate = true;
         //this.PlanetTimer = this.time.addEvent({ delay: 1000, callbackScope: this, callback: this.SpawnPlanet, loop: true });
-        
-    }
-
-    update(time, delta) {
+    
         var gamepads = this.input.gamepad.gamepads;
 
         if (gamepads.length > 0) {
             this.gamepad = gamepads[0];
         }
+    }
 
+    update(time, delta) {
         if (this.gamepad) {
             this.GamepadInput();
             //this.KeyboardInput();
@@ -95,24 +102,39 @@ export default class GameScene extends Phaser.Scene {
             this.KeyboardInput();
         }
 
-        switch (this.playerState) {
-            case PlayerStates.Normal:
-                this.player.setTexture('FalconRocket');
-                break;
-            case PlayerStates.Boost:
-                this.player.setTexture('FalconRocketFire');
-                break;
-            case PlayerStates.Turbo:
-                this.player.setTexture('FalconRocketBigFire');
-                break;
+        if(Debug == true) {
+            if(this.debugDamage.isDown) {
+                this.PlayerDamage();
+            }
         }
 
-
+        if(this.PlayerStateUpdate == true){
+            switch (this.playerState) {
+                case PlayerStates.Normal:
+                    this.player.setTexture('FalconRocket');
+                    break;
+                case PlayerStates.Boost:
+                    this.player.setTexture('FalconRocketFire');
+                    break;
+                case PlayerStates.Turbo:
+                    this.player.setTexture('FalconRocketBigFire');
+                    break;
+                case PlayerStates.Dead:
+                    this.player.setTexture('Explosion');
+                    this.deadView.setVisible(true);
+                    break;
+            }
+            console.log('Player State update');
+            this.PlayerStateUpdate = false;
+        }
         this.bg.tilePositionX += this.player.body.deltaX() * 0.5;
         this.bg.tilePositionY += this.player.body.deltaY() * 0.5;
     }
 
     GamepadInput() {
+        if(this.PlayerIsDead == true)
+            return;
+
         if (this.gamepad.left || this.gamepad.axes[0].getValue() < -0.2) {
             this.PlayerLeft();
         }
@@ -139,6 +161,9 @@ export default class GameScene extends Phaser.Scene {
 
 
     KeyboardInput() {
+        if(this.PlayerIsDead == true)
+            return;
+
         if (this.cursors.left.isDown) {
             this.PlayerLeft();
         }
@@ -156,7 +181,7 @@ export default class GameScene extends Phaser.Scene {
             this.PlayerNitro();
         }
         else {
-            this.playerState = PlayerStates.Normal;
+            this.UpdatePlayerState(PlayerStates.Normal);
             this.player.setAcceleration(0);
             this.NitroTimer.paused = true;
         }
@@ -164,11 +189,11 @@ export default class GameScene extends Phaser.Scene {
 
     PlayerUp() {
         this.physics.velocityFromRotation(this.player.rotation - 1.5708, 150, this.player.body.acceleration);
-        this.playerState = PlayerStates.Boost;
+        this.UpdatePlayerState(PlayerStates.Boost);
     }
 
     PlayerNitro() {
-        this.playerState = PlayerStates.Turbo;
+        this.UpdatePlayerState(PlayerStates.Turbo);
         this.physics.velocityFromRotation(this.player.rotation - 1.5708, 600, this.player.body.acceleration);
         this.NitroTimer.paused = false;
     }
@@ -183,7 +208,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     PlayerDamage() {
-        this.LiveBar.setAttribute('value', (parseInt(this.LiveBar.getAttribute('value')) - 10).toString());
+        this.LiveBar.setAttribute('value', (parseInt(this.LiveBar.getAttribute('value')) - 50).toString());
+
+        if(parseInt(this.LiveBar.getAttribute('value')) <= 0){
+            this.PlayerIsDead = true;
+            this.player.setMaxVelocity(10);
+            this.UpdatePlayerState(PlayerStates.Dead);
+        }
     }
 
     NitroTick() {
@@ -193,12 +224,14 @@ export default class GameScene extends Phaser.Scene {
 
     }
 
-    SpawnPlanets() {
-        // var r = 6 * Math.random();
-        // var a = 2 * Math.PI * Math.random();
-        // var x = r * Math.sin(a) * this.player.body.x;
-        // var y = r * Math.cos(a) * this.player.body.y;
+    UpdatePlayerState(state){
+        if(this.playerState != state){
+            this.playerState = state;
+            this.PlayerStateUpdate = true;
+        }
+    }
 
+    SpawnPlanets() {
         var x = Math.ceil(Math.random() * 50000) * (Math.round(Math.random()) ? 1 : -1)
         var y = Math.ceil(Math.random() * 50000) * (Math.round(Math.random()) ? 1 : -1)
 
