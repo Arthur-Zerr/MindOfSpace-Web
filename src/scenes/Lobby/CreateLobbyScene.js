@@ -28,7 +28,7 @@ export default class CreateLobbyScene extends Phaser.Scene {
             alert("Error creating game lobby!");
             this.scene.transition({ target: 'MenuScene'});
         }
-        console.log(JSON.parse(response.response))
+    
         this.gameLobby = JSON.parse(response.response)
         
         var windowWidth = window.innerWidth;
@@ -56,13 +56,10 @@ export default class CreateLobbyScene extends Phaser.Scene {
             if(event.target.name === 'backButton')
             {
                 this.leaveGame(this);
-                console.log('Click');
-                
             }
         }, this);
 
         this.updateLobbyTimer = this.time.addEvent({ delay: 1000, callbackScope: this, callback: this.updateLobby, loop: true });
-        this.addUser(this.gameLobby.playerHost.username, this.gameLobby.playerHost.level, 'Host')
         this.updateLobby();
     }
 
@@ -71,10 +68,10 @@ export default class CreateLobbyScene extends Phaser.Scene {
     }
 
     updateLobby = async function() {
-        this.clearTable();
         var response = await this.ApiClient.UpdateGameLobby(this.gameLobby.id);
         if(response.code != 200) {
             alert('ERROR in Lobby, please leave!');
+            this.updateLobbyTimer.paused = true;
             return;
         }
         var gameUpdate = JSON.parse(response.response);
@@ -87,10 +84,12 @@ export default class CreateLobbyScene extends Phaser.Scene {
             return;
         }
 
-        if(gameUpdate.playerList === undefined)
+        if(gameUpdate.playerList == undefined || gameUpdate.playerList == null )
             return;
         if(this.playerList === gameUpdate.playerList)
             return;
+        
+        this.clearTable();
 
         gameUpdate.playerList.forEach(player => {
             this.addUser(player.username, player.level, 'Player')
@@ -112,10 +111,9 @@ export default class CreateLobbyScene extends Phaser.Scene {
 
     clearTable = function() {
         var table = document.getElementById("lobbyTable")
-        if(table.rows.length <= 3)
-            return;
-        for (let tableRow = 3; tableRow <= table.rows.length; tableRow++) {
-            table.deleteRow(tableRow);
+        var length = table.rows.length;
+        for (let tableRow = 3; tableRow <= length; tableRow++) {
+            table.deleteRow(table.rows.length-1);
         }
     }
 

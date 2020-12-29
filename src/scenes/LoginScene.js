@@ -77,10 +77,37 @@ export default class LoginScene extends Phaser.Scene {
                     alert("Username or Password are Wrong!");
                 }
             }
+            if (event.target.name === 'registerButton')
+            {
+                this.usernameValue = this.usernameTextbox.value;
+                this.passwordValue = this.passwordTextbox.value;
+
+                if(this.usernameValue != "" || this.passwordValue != "")
+                {
+                    var playerRegister = new PlayerForLoginDto();
+                    playerRegister.Username = this.usernameValue;
+                    playerRegister.Password = this.passwordValue;
+
+                    var response = await this.ApiClient.RegisterAsync(playerRegister);
+                    if(response.code == 200)
+                    {
+                        var test = JSON.parse(response.response)
+                        localStorage.setItem("Player", response.response)
+                        this.slide.exit();
+                        this.scene.transition({ target: 'MenuScene'});
+                    }
+                    else if (response.code == 400)
+                    {
+                        alert("User already exists");
+                    }
+                }
+                else
+                {
+                    console.log("Click");
+                    alert("Username or Password are empty");
+                }
+            }
         }, this);
-
-
-
     }
 
     update() { 

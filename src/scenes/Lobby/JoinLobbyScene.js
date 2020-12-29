@@ -55,13 +55,11 @@ export default class JoinLobbyScene extends Phaser.Scene {
         }, this);
 
         this.updateLobbyTimer = this.time.addEvent({ delay: 1000, callbackScope: this, callback: this.updateLobby, loop: true });
-        this.addUser(this.gameLobby.playerHost.username, this.gameLobby.playerHost.level, 'Host')
         this.updateLobby();
 
     }
 
     updateLobby = async function() {
-        this.clearTable();
         var response = await this.ApiClient.UpdateGameLobby(this.gameId);
         if(response.code != 200) {
             alert('ERROR in Lobby, please leave!');
@@ -77,10 +75,11 @@ export default class JoinLobbyScene extends Phaser.Scene {
             return;
         }
 
-        if(gameUpdate.playerList === undefined)
+        if(gameUpdate.playerList == undefined || gameUpdate.playerList == null )
             return;
         if(this.playerList === gameUpdate.playerList)
             return;
+        this.clearTable();
 
         gameUpdate.playerList.forEach(player => {
             this.addUser(player.username, player.level, 'Player')
@@ -101,10 +100,9 @@ export default class JoinLobbyScene extends Phaser.Scene {
 
     clearTable = function() {
         var table = document.getElementById("lobbyTable")
-        if(table.rows.length <= 3)
-            return;
-        for (let tableRow = 3; tableRow <= table.rows.length; tableRow++) {
-            table.deleteRow(tableRow);
+        var length = table.rows.length;
+        for (let tableRow = 3; tableRow <= length; tableRow++) {
+            table.deleteRow(table.rows.length-1);
         }
     }
 

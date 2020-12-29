@@ -25,6 +25,25 @@ export default class APIClient {
             httpRequest.send(JSON.stringify(playerLogin));
         });
     }
+
+    RegisterAsync(playerLogin) {
+        return new Promise(reslove => {
+            var httpRequest = new XMLHttpRequest();
+
+            if(!httpRequest){
+                alert('ERROR HTTP Client');
+            }
+            httpRequest.open("POST", this.APIUrl + "/Player/Register", true);
+            httpRequest.setRequestHeader("Content-Type", "application/json");
+            httpRequest.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    reslove({response: this.responseText, code: this.status});
+                }
+            };
+
+            httpRequest.send(JSON.stringify(playerLogin));
+        });
+    }
     
     LogoutAsync(playerLogoutData){
         //TODO Add this
